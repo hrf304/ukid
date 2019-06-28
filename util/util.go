@@ -1,10 +1,11 @@
 package util
 
 import (
+	"fmt"
 	"github.com/go-xorm/xorm"
+	"github.com/satori/go.uuid"
 	"strings"
 	"ukid/entity"
-	"fmt"
 )
 
 func Query(db *xorm.Engine, param entity.QueryParam, rowsSlicePtr interface{})(*entity.QueryResult, error){
@@ -12,6 +13,7 @@ func Query(db *xorm.Engine, param entity.QueryParam, rowsSlicePtr interface{})(*
 
 	// 结果session
 	dbSession := db.Table(param.Table)
+	defer dbSession.Close()
 	if len(param.Selects) > 0{
 		dbSession = dbSession.Select(param.Table + ".*")
 	}else{
@@ -21,6 +23,7 @@ func Query(db *xorm.Engine, param entity.QueryParam, rowsSlicePtr interface{})(*
 	// 总行数session
 	totalRows := 0
 	totalRowsSession := db.Table(param.Table)
+	defer totalRowsSession.Close()
 	totalRowsSession.Select("count(*) as totalPages")
 
 	// 默认join之影响结果session
@@ -70,4 +73,11 @@ func Query(db *xorm.Engine, param entity.QueryParam, rowsSlicePtr interface{})(*
 	}
 
 	return &pageResult, nil
+}
+
+func UUID()string{
+	var uuidd uuid.UUID
+	uuidd, _ = uuid.NewV4()
+
+	return uuidd.String()
 }

@@ -1,24 +1,26 @@
 package main
 
-import(
-	"github.com/gin-gonic/gin"
-	"ukid/router"
-	"ukid/db"
-	_ "github.com/go-sql-driver/mysql"
-	"ukid/sqlgen"
+import (
 	"fmt"
+	"github.com/gin-gonic/gin"
+	_ "github.com/go-sql-driver/mysql"
+	"ukid/router"
+	"ukid/sqlgen"
+	"ukid/xormtext"
+	"xormt"
 )
 
 func main() {
 	test()
 	ginEngine := gin.Default()
 
-	db.InitDB()
+	//db.InitDB()
+	xormt.Init(xormtext.GetTenants, xormtext.GetTenantId)
+
 	router.Register(ginEngine)
 
 	ginEngine.Run(":8080")
 }
-
 func test(){
 	jsonStr := `
 		{

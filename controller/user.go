@@ -1,31 +1,36 @@
 package controller
 
 import (
-	"github.com/gin-gonic/gin"
-	"net/http"
 	"fmt"
+	"net/http"
 	"ukid/entity"
 	"ukid/util"
-	"ukid/db"
+	"xormt"
 )
 
 type UserController struct {
 }
 
-func (c *UserController) Get(ctx *gin.Context) {
-	var Resp struct {
-		Code int         `json:"code"`
-		Data interface{} `json:"data"`
-		Msg  string      `json:"msg"`
-	}
-	Resp.Code = 200
-	Resp.Msg = "hello world"
-	Resp.Data = ctx.Param("id")
+var i = 0
 
-	ctx.JSON(http.StatusOK, Resp)
+func (c *UserController) Get(ctx *xormt.MultiTenantContext) {
+	i++
+
+	user := &entity.User{}
+	user.Id = util.UUID()
+	user.Name = fmt.Sprintf("huangrf%d", i)
+	user.LoginId = fmt.Sprintf("huangrf%d", i)
+	user.Major = fmt.Sprintf("major%d", i)
+
+	_, err := ctx.DB.InsertOne(user)
+	if err != nil{
+		ctx.JSON(500, &entity.Resp{500, err.Error(), nil})
+	}else{
+		ctx.JSON(http.StatusOK, &entity.Resp{http.StatusOK, "", user.Id})
+	}
 }
 
-func (c *UserController) GetUsers(ctx *gin.Context) {
+func (c *UserController) GetUsers(ctx *xormt.MultiTenantContext) {
 	queryParam := entity.QueryParam{}
 	err := ctx.ShouldBindQuery(&queryParam)
 	if err != nil {
@@ -33,7 +38,7 @@ func (c *UserController) GetUsers(ctx *gin.Context) {
 	} else {
 		queryParam.Table = "sys_user"
 		rowsSlice := make([]map[string]interface{}, 0)
-		result, err := util.Query(db.DB, queryParam, &rowsSlice)
+		result, err := util.Query(ctx.DB, queryParam, &rowsSlice)
 		if err != nil {
 			ctx.JSON(500, &entity.Resp{500, err.Error(), nil})
 		} else {
